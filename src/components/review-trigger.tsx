@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Play, FolderSearch, FileCheck, GitBranch, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { FileTree } from "@/components/file-tree";
 
 type FileEntry = { path: string; size: number };
 
@@ -137,11 +138,16 @@ export function ReviewTrigger({ projectId }: { projectId: string }) {
   }
 
   function toggleAll(fileList: string[]) {
-    if (selectedFiles.size === fileList.length) {
-      setSelectedFiles(new Set());
-    } else {
-      setSelectedFiles(new Set(fileList));
-    }
+    setSelectedFiles((prev) => {
+      const next = new Set(prev);
+      const allSelected = fileList.every((f) => next.has(f));
+      if (allSelected) {
+        for (const f of fileList) next.delete(f);
+      } else {
+        for (const f of fileList) next.add(f);
+      }
+      return next;
+    });
   }
 
   const isSelectingFiles = mode === "select-files" || mode === "select-changed";
@@ -166,8 +172,8 @@ export function ReviewTrigger({ projectId }: { projectId: string }) {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className={isSelectingFiles ? "sm:max-w-lg overflow-hidden" : undefined}>
-          <DialogHeader>
+        <DialogContent className={isSelectingFiles ? "sm:max-w-2xl flex flex-col max-h-[85vh]" : undefined}>
+          <DialogHeader className="shrink-0">
             <DialogTitle>Review Scope</DialogTitle>
             <DialogDescription>
               Choose what to include in this review.
@@ -237,7 +243,7 @@ export function ReviewTrigger({ projectId }: { projectId: string }) {
           )}
 
           {isSelectingFiles && (
-            <div className="flex flex-col gap-4 min-h-0 overflow-hidden">
+            <div className="flex flex-col gap-4 min-h-0 flex-1 overflow-hidden">
               {mode === "select-changed" && gitInfo?.branch && (
                 <div className="text-xs text-muted-foreground shrink-0">
                   Branch: <code className="bg-accent px-1.5 py-0.5 rounded-md font-mono text-foreground">{gitInfo.branch}</code>
@@ -245,9 +251,9 @@ export function ReviewTrigger({ projectId }: { projectId: string }) {
               )}
 
               {mode === "select-changed" && gitInfo?.commits && gitInfo.commits.length > 0 && (
-                <div className="space-y-1.5 min-h-0 shrink-0">
+                <div className="space-y-1.5 shrink-0">
                   <p className="text-xs font-medium text-muted-foreground">Commits on this branch</p>
-                  <div className="max-h-40 overflow-y-auto rounded-lg border border-border/60">
+                  <div className="max-h-[40vh] overflow-y-auto rounded-lg border border-border/60">
                     {gitInfo.commits.map((commit) => {
                       const isExpanded = expandedCommit === commit.sha;
                       const cFiles = commitFiles[commit.sha] ?? [];
@@ -266,7 +272,7 @@ export function ReviewTrigger({ projectId }: { projectId: string }) {
                             <span className="truncate min-w-0">{commit.message}</span>
                           </button>
                           {isExpanded && (
-                            <div className="px-3 pb-2 pl-8 space-y-1 overflow-hidden">
+                            <div className="px-3 pb-2 pl-8 overflow-hidden">
                               {isLoading ? (
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground py-1">
                                   <Loader2 className="size-3 animate-spin" />
@@ -275,26 +281,12 @@ export function ReviewTrigger({ projectId }: { projectId: string }) {
                               ) : cFiles.length === 0 ? (
                                 <p className="text-xs text-muted-foreground">No files in this commit.</p>
                               ) : (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => allSelected ? removeCommitFiles(cFiles) : addCommitFiles(cFiles)}
-                                    className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-                                  >
-                                    {allSelected ? "Remove all from selection" : "Add all to selection"}
-                                  </button>
-                                  {cFiles.map((f) => (
-                                    <label key={f} className="flex items-center gap-2 text-xs hover:bg-accent/40 rounded-md px-1.5 py-1 cursor-pointer min-w-0 transition-colors">
-                                      <input
-                                        type="checkbox"
-                                        checked={selectedFiles.has(f)}
-                                        onChange={() => toggleFile(f)}
-                                        className="accent-primary shrink-0 rounded"
-                                      />
-                                      <span className="truncate min-w-0 font-mono">{f}</span>
-                                    </label>
-                                  ))}
-                                </>
+                                <FileTree
+                                  files={cFiles}
+                                  selectedFiles={selectedFiles}
+                                  onToggleFile={toggleFile}
+                                  onToggleAll={toggleAll}
+                                />
                               )}
                             </div>
                           )}
@@ -306,29 +298,21 @@ export function ReviewTrigger({ projectId }: { projectId: string }) {
               )}
 
               <div className="flex items-center justify-between text-sm text-muted-foreground shrink-0">
-                {mode === "select-files" ? (
-                  <button type="button" onClick={() => toggleAll(currentFileList)} className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
-                    {selectedFiles.size === currentFileList.length ? "Deselect all" : "Select all"}
-                  </button>
-                ) : (
-                  <span className="text-xs font-medium">Selected files</span>
-                )}
+                <button type="button" onClick={() => toggleAll(currentFileList)} className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
+                  {currentFileList.length > 0 && currentFileList.every((f) => selectedFiles.has(f)) ? "Deselect all" : "Select all"}
+                </button>
                 <span className="text-xs font-medium">{selectedFiles.size} selected</span>
               </div>
-              <div className="max-h-48 overflow-y-auto rounded-lg border border-border/60 p-2 flex flex-col gap-0.5 min-h-0">
-                {(mode === "select-files" ? currentFileList : Array.from(selectedFiles).sort()).map((filePath) => (
-                  <label key={filePath} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent/40 cursor-pointer min-w-0 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={selectedFiles.has(filePath)}
-                      onChange={() => toggleFile(filePath)}
-                      className="accent-primary shrink-0 rounded"
-                    />
-                    <span className="truncate min-w-0 font-mono text-xs">{filePath}</span>
-                  </label>
-                ))}
-                {mode === "select-changed" && selectedFiles.size === 0 && (
+              <div className="overflow-y-auto overflow-x-hidden rounded-lg border border-border/60 p-1.5 min-h-0 flex-1">
+                {currentFileList.length === 0 && mode === "select-changed" ? (
                   <p className="text-xs text-muted-foreground text-center py-4">No files selected. Expand a commit above to add files.</p>
+                ) : (
+                  <FileTree
+                    files={currentFileList}
+                    selectedFiles={selectedFiles}
+                    onToggleFile={toggleFile}
+                    onToggleAll={toggleAll}
+                  />
                 )}
               </div>
               <DialogFooter className="shrink-0">
