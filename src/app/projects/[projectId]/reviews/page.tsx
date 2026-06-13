@@ -3,7 +3,22 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { Trash2, GitBranch } from "lucide-react";
 import type { Review } from "@/types";
+
+function StatusPill({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    completed: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    failed: "bg-red-500/10 text-red-600 dark:text-red-400",
+    running: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    pending: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
+  };
+  return (
+    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${styles[status] || styles.pending}`}>
+      {status}
+    </span>
+  );
+}
 
 export default function ReviewsPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = use(params);
@@ -31,42 +46,43 @@ export default function ReviewsPage({ params }: { params: Promise<{ projectId: s
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Review History</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Review History</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {reviews.length} review{reviews.length !== 1 ? "s" : ""} total
+        </p>
+      </div>
 
       {reviews.length === 0 ? (
-        <p className="text-muted-foreground">No reviews yet.</p>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20">
+          <p className="text-sm text-muted-foreground">No reviews yet.</p>
+        </div>
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-3">
           {reviews.map((r) => (
             <Link key={r.id} href={`/projects/${projectId}/reviews/${r.id}`}>
-              <div className="flex items-center justify-between p-4 border rounded-md hover:bg-accent/50">
-                <div>
-                  <p className="font-medium">{new Date(r.started_at).toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">
+              <div className="flex items-center justify-between px-4 py-3.5 rounded-lg border border-border/60 bg-card hover:bg-accent/50 hover:border-primary/20 transition-all duration-200">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm">{new Date(r.started_at).toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
                     {r.files_scanned} files scanned &middot; {r.total_items} issues
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {r.branch_name && (
-                    <span className="text-xs px-2 py-1 rounded bg-purple-100 text-purple-700">
+                    <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                      <GitBranch className="size-3" />
                       {r.branch_name}
                     </span>
                   )}
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    r.status === "completed" ? "bg-green-100 text-green-700" :
-                    r.status === "failed" ? "bg-red-100 text-red-700" :
-                    r.status === "running" ? "bg-blue-100 text-blue-700" :
-                    "bg-gray-100 text-gray-700"
-                  }`}>
-                    {r.status}
-                  </span>
+                  <StatusPill status={r.status} />
                   <button
                     onClick={(e) => promptDelete(e, r.id)}
-                    className="text-xs text-muted-foreground hover:text-red-600 px-1.5 py-1 rounded hover:bg-red-50 transition-colors"
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                     title="Delete review"
                   >
-                    ✕
+                    <Trash2 className="size-3.5" />
                   </button>
                 </div>
               </div>

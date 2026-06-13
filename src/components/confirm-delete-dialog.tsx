@@ -9,6 +9,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { AlertTriangle } from "lucide-react";
 
 interface ConfirmDeleteDialogProps {
   open: boolean;
@@ -31,8 +32,15 @@ export function ConfirmDeleteDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+              <AlertTriangle className="size-4 text-destructive" />
+            </div>
+            <div>
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription className="mt-1">{description}</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>

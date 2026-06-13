@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { ProjectCard } from "@/components/project-card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { CreateProjectDialog } from "@/components/project-form";
+import { Plus } from "lucide-react";
 import type { Project } from "@/types";
 
 export default function Dashboard() {
@@ -17,24 +17,39 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-muted-foreground">Loading projects...</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Projects</h1>
-        <Link href="/projects/new">
-          <Button>New Project</Button>
-        </Link>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage your code review projects
+          </p>
+        </div>
+        <CreateProjectDialog />
       </div>
 
       {projects.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-lg">No projects yet</p>
-          <p className="text-sm mt-1">Create a project to start reviewing code</p>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20">
+          <div className="size-12 rounded-full bg-muted flex items-center justify-center mb-4">
+            <Plus className="size-5 text-muted-foreground" />
+          </div>
+          <p className="text-base font-medium">No projects yet</p>
+          <p className="text-sm text-muted-foreground mt-1 mb-4">
+            Create a project to start reviewing code
+          </p>
+          <CreateProjectDialog />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {projects.map((p) => (
             <ProjectCard key={p.id} project={p} />
           ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { Upload } from "lucide-react";
 
 interface Props {
   projectId: string;
@@ -29,8 +30,10 @@ export function RuleUpload({ projectId, onUploaded }: Props) {
 
   return (
     <div
-      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-        dragging ? "border-blue-500 bg-blue-50 dark:bg-blue-950" : "border-muted-foreground/25"
+      className={`rounded-lg border-2 border-dashed p-6 text-center transition-all duration-200 ${
+        dragging
+          ? "border-primary bg-primary/5"
+          : "border-border/60 hover:border-primary/30 hover:bg-accent/30"
       }`}
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
@@ -40,8 +43,9 @@ export function RuleUpload({ projectId, onUploaded }: Props) {
         handleFiles(e.dataTransfer.files);
       }}
     >
+      <Upload className="size-5 text-muted-foreground mx-auto mb-2" />
       <p className="text-sm text-muted-foreground">
-        Drag & drop <code>.md</code> files here to add as rules
+        Drag & drop <code className="bg-accent px-1 py-0.5 rounded text-xs">.md</code> files here
       </p>
       <input
         type="file"
@@ -51,7 +55,7 @@ export function RuleUpload({ projectId, onUploaded }: Props) {
         id="rule-upload"
         onChange={(e) => e.target.files && handleFiles(e.target.files)}
       />
-      <label htmlFor="rule-upload" className="text-sm text-blue-500 hover:underline cursor-pointer mt-2 inline-block">
+      <label htmlFor="rule-upload" className="text-sm text-primary hover:text-primary/80 font-medium cursor-pointer mt-2 inline-block transition-colors">
         or click to browse
       </label>
     </div>

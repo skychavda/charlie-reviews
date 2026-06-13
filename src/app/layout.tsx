@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const poppins = Poppins({
+  variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+});
 
 export const metadata: Metadata = {
   title: "Charlie Reviews",
@@ -13,16 +22,29 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <header className="border-b px-6 py-3 flex items-center gap-6">
-          <Link href="/" className="font-semibold text-lg">Charlie Reviews</Link>
-          <nav className="flex gap-4 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-foreground">Dashboard</Link>
-            <Link href="/projects/new" className="hover:text-foreground">New Project</Link>
-          </nav>
+    <html lang="en" className={`${poppins.variable} ${jetbrainsMono.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-lg">
+          <div className="mx-auto max-w-7xl px-6 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-8">
+              <Link href="/" className="flex items-center gap-2.5 group">
+                <div className="size-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm tracking-tight">
+                  CR
+                </div>
+                <span className="font-semibold text-base tracking-tight">Charlie Reviews</span>
+              </Link>
+              <nav className="flex items-center gap-1">
+                <Link
+                  href="/"
+                  className="px-3 py-1.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                >
+                  Dashboard
+                </Link>
+              </nav>
+            </div>
+          </div>
         </header>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 mx-auto w-full max-w-7xl px-6 py-8">{children}</main>
       </body>
     </html>
   );

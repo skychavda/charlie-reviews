@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, use } from "react";
 import { RuleEditor } from "@/components/rule-editor";
 import { RuleUpload } from "@/components/rule-upload";
 import { RuleList } from "@/components/rule-list";
-import { Separator } from "@/components/ui/separator";
 import type { Rule } from "@/types";
 
 export default function RulesPage({ params }: { params: Promise<{ projectId: string }> }) {
@@ -19,13 +18,20 @@ export default function RulesPage({ params }: { params: Promise<{ projectId: str
   useEffect(() => { fetchRules(); }, [fetchRules]);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Review Rules</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Review Rules</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Define rules to guide the AI reviewer
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6">
         {/* Left sidebar */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-medium">Rules ({rules.length})</h3>
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold tracking-tight">Rules ({rules.length})</h3>
+          </div>
           <RuleList
             rules={rules}
             selectedId={selected?.id}
@@ -33,8 +39,9 @@ export default function RulesPage({ params }: { params: Promise<{ projectId: str
             onSelect={setSelected}
             onRefresh={() => { fetchRules(); setSelected(null); }}
           />
-          <Separator />
-          <RuleUpload projectId={projectId} onUploaded={fetchRules} />
+          <div className="border-t border-border/60 pt-5">
+            <RuleUpload projectId={projectId} onUploaded={fetchRules} />
+          </div>
         </div>
 
         {/* Right editor */}

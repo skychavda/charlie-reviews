@@ -6,11 +6,15 @@ import type { Review, ReviewItem, Severity } from "@/types";
 import { ReviewItemCard } from "./review-item-card";
 import { SeverityBadge } from "./severity-badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { REVIEW_POLL_INTERVAL } from "@/lib/constants";
+import { RefreshCw, XCircle, FileText, ChevronDown, ChevronRight, GitBranch, AlertTriangle } from "lucide-react";
 
 interface ReviewWithItems extends Review {
   items: ReviewItem[];
 }
+
+const SEVERITY_ORDER: Severity[] = ["critical", "warning", "suggestion", "info"];
 
 export function ReviewResult({ projectId, reviewId }: { projectId: string; reviewId: string }) {
   const router = useRouter();
@@ -35,7 +39,13 @@ export function ReviewResult({ projectId, reviewId }: { projectId: string; revie
     return () => clearInterval(interval);
   }, [fetchReview]);
 
-  if (!review) return <div className="text-muted-foreground">Loading...</div>;
+  if (!review) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   async function cancelReview() {
     setCancelling(true);
@@ -53,13 +63,21 @@ export function ReviewResult({ projectId, reviewId }: { projectId: string; revie
 
   if (review.status === "pending" || review.status === "running") {
     return (
-      <div className="text-center py-12 space-y-4">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto" />
-        <p className="text-muted-foreground">
-          {review.status === "pending" ? "Preparing review..." : `Reviewing ${review.files_scanned} files...`}
-        </p>
+      <div className="flex flex-col items-center justify-center py-20 space-y-5">
+        <div className="relative">
+          <div className="animate-spin h-10 w-10 border-3 border-primary/30 border-t-primary rounded-full" />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-medium">
+            {review.status === "pending" ? "Preparing review..." : "Reviewing files..."}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {review.status === "running" ? `${review.files_scanned} files in progress` : "Setting up"}
+          </p>
+        </div>
         <Button variant="outline" size="sm" onClick={cancelReview} disabled={cancelling}>
-          {cancelling ? "Cancelling..." : "Cancel Review"}
+          <XCircle data-icon="inline-start" className="size-4" />
+          {cancelling ? "Cancelling..." : "Cancel"}
         </Button>
       </div>
     );
@@ -67,22 +85,29 @@ export function ReviewResult({ projectId, reviewId }: { projectId: string; revie
 
   if (review.status === "failed") {
     return (
-      <div className="bg-red-50 dark:bg-red-950 border border-red-200 rounded-md p-4 space-y-3">
-        <div>
-          <p className="font-medium text-red-600">Review Failed</p>
-          <p className="text-sm text-red-500 mt-1">{review.error_message}</p>
-        </div>
-        <Button size="sm" onClick={rerunReview} disabled={rerunning}>
-          {rerunning ? "Re-running..." : "Re-run Review"}
-        </Button>
-      </div>
+      <Card className="border-destructive/30">
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="size-9 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
+              <AlertTriangle className="size-5 text-destructive" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-destructive">Review Failed</p>
+              <p className="text-sm text-muted-foreground mt-1">{review.error_message}</p>
+            </div>
+          </div>
+          <Button size="sm" onClick={rerunReview} disabled={rerunning}>
+            <RefreshCw data-icon="inline-start" className="size-4" />
+            {rerunning ? "Re-running..." : "Re-run Review"}
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   const items = review.items || [];
   const filtered = filter === "all" ? items : items.filter((i) => i.severity === filter);
 
-  // Group by file
   const grouped = filtered.reduce<Record<string, ReviewItem[]>>((acc, item) => {
     (acc[item.file_path] ||= []).push(item);
     return acc;
@@ -97,40 +122,66 @@ export function ReviewResult({ projectId, reviewId }: { projectId: string; revie
 
   return (
     <div className="space-y-6">
-      {/* Summary */}
-      <div className="space-y-2">
-        <div className="flex flex-wrap gap-4 items-center">
-          {review.branch_name && (
-            <span className="text-xs px-2 py-1 rounded bg-purple-100 text-purple-700">
-              {review.branch_name}
-            </span>
-          )}
-          <p className="text-sm text-muted-foreground">{review.files_scanned} files scanned</p>
-          <p className="text-sm text-muted-foreground">{items.length} issues found</p>
-          <Button variant="outline" size="sm" onClick={rerunReview} disabled={rerunning}>
-            {rerunning ? "Re-running..." : "Re-run"}
-          </Button>
-        </div>
-        <div className="flex gap-2">
-          {(["all", "critical", "warning", "suggestion", "info"] as const).map((s) => (
+      {/* Summary bar */}
+      <Card>
+        <CardContent>
+          <div className="flex flex-wrap items-center gap-4">
+            {review.branch_name && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                <GitBranch className="size-3" />
+                {review.branch_name}
+              </span>
+            )}
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <FileText className="size-4" />
+              {review.files_scanned} files scanned
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {items.length} issues found
+            </div>
+            <div className="ml-auto">
+              <Button variant="outline" size="sm" onClick={rerunReview} disabled={rerunning}>
+                <RefreshCw data-icon="inline-start" className="size-3.5" />
+                {rerunning ? "Re-running..." : "Re-run"}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Severity filter tabs */}
+      <div className="flex gap-1.5 flex-wrap">
+        {(["all", ...SEVERITY_ORDER] as const).map((s) => {
+          const isActive = filter === s;
+          const count = s === "all" ? items.length : severityCounts[s];
+          return (
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`text-xs px-2 py-1 rounded ${filter === s ? "bg-accent font-medium" : "hover:bg-accent/50"}`}
+              className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors duration-200 ${
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border/60 hover:bg-accent hover:text-foreground hover:border-primary/20"
+              }`}
             >
-              {s === "all" ? `All (${items.length})` : `${s} (${severityCounts[s]})`}
+              <span className="capitalize">{s}</span>
+              <span className={`${isActive ? "text-primary-foreground/70" : "text-muted-foreground/60"}`}>
+                {count}
+              </span>
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
       {/* Results */}
       {Object.keys(grouped).length === 0 ? (
-        <p className="text-muted-foreground text-center py-8">
-          {items.length === 0 ? "No issues found — looking good!" : "No items match the current filter."}
-        </p>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16">
+          <p className="text-sm text-muted-foreground">
+            {items.length === 0 ? "No issues found -- looking good!" : "No items match the current filter."}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {Object.entries(grouped).map(([filePath, fileItems]) => (
             <FileGroup key={filePath} filePath={filePath} items={fileItems} />
           ))}
@@ -143,26 +194,28 @@ export function ReviewResult({ projectId, reviewId }: { projectId: string; revie
 function FileGroup({ filePath, items }: { filePath: string; items: ReviewItem[] }) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="border rounded-md">
+    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 p-3 text-left hover:bg-accent/50"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-accent/40 transition-colors duration-200"
       >
-        <span className="text-xs">{open ? "▼" : "▶"}</span>
-        <code className="text-sm">{filePath}</code>
-        <span className="text-xs text-muted-foreground">({items.length})</span>
-        <div className="flex gap-1 ml-auto">
-          {(["critical", "warning", "suggestion", "info"] as Severity[]).map((s) => {
+        {open ? <ChevronDown className="size-4 text-muted-foreground shrink-0" /> : <ChevronRight className="size-4 text-muted-foreground shrink-0" />}
+        <code className="text-sm font-mono font-medium truncate">{filePath}</code>
+        <span className="text-xs text-muted-foreground shrink-0">({items.length})</span>
+        <div className="flex gap-1.5 ml-auto shrink-0">
+          {SEVERITY_ORDER.map((s) => {
             const count = items.filter((i) => i.severity === s).length;
             return count > 0 ? <SeverityBadge key={s} severity={s} /> : null;
           })}
         </div>
       </button>
       {open && (
-        <div className="px-4 pb-3 space-y-3">
-          {items.map((item) => (
-            <ReviewItemCard key={item.id} item={item} />
-          ))}
+        <div className="px-4 pb-4 space-y-3 border-t border-border/40">
+          <div className="pt-3 space-y-3">
+            {items.map((item) => (
+              <ReviewItemCard key={item.id} item={item} />
+            ))}
+          </div>
         </div>
       )}
     </div>
