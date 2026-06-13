@@ -2,8 +2,9 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
-import { Trash2, GitBranch } from "lucide-react";
+import { Trash2, GitBranch, ArrowLeft } from "lucide-react";
 import type { Review } from "@/types";
 
 function StatusPill({ status }: { status: string }) {
@@ -47,6 +48,13 @@ export default function ReviewsPage({ params }: { params: Promise<{ projectId: s
 
   return (
     <div className="space-y-8">
+      <Link href={`/projects/${projectId}`}>
+        <Button variant="ghost" size="sm">
+          <ArrowLeft data-icon="inline-start" className="size-4" />
+          Back to Project
+        </Button>
+      </Link>
+
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Review History</h1>
         <p className="text-sm text-muted-foreground mt-1">

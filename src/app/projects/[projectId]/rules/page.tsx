@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback, use } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { RuleEditor } from "@/components/rule-editor";
 import { RuleUpload } from "@/components/rule-upload";
 import { RuleList } from "@/components/rule-list";
@@ -19,6 +22,13 @@ export default function RulesPage({ params }: { params: Promise<{ projectId: str
 
   return (
     <div className="space-y-8">
+      <Link href={`/projects/${projectId}`}>
+        <Button variant="ghost" size="sm">
+          <ArrowLeft data-icon="inline-start" className="size-4" />
+          Back to Project
+        </Button>
+      </Link>
+
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Review Rules</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -26,33 +36,33 @@ export default function RulesPage({ params }: { params: Promise<{ projectId: str
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6">
-        {/* Left sidebar */}
-        <div className="space-y-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold tracking-tight">Rules ({rules.length})</h3>
-          </div>
-          <RuleList
-            rules={rules}
-            selectedId={selected?.id}
-            projectId={projectId}
-            onSelect={setSelected}
-            onRefresh={() => { fetchRules(); setSelected(null); }}
-          />
-          <div className="border-t border-border/60 pt-5">
-            <RuleUpload projectId={projectId} onUploaded={fetchRules} />
-          </div>
-        </div>
+      {/* Rule Editor */}
+      <RuleEditor
+        key={selected?.id || "new"}
+        projectId={projectId}
+        onSaved={() => { fetchRules(); setSelected(null); }}
+        initial={selected ? { id: selected.id, title: selected.title, content: selected.content } : undefined}
+      />
 
-        {/* Right editor */}
-        <div>
-          <RuleEditor
-            key={selected?.id || "new"}
-            projectId={projectId}
-            onSaved={() => { fetchRules(); setSelected(null); }}
-            initial={selected ? { id: selected.id, title: selected.title, content: selected.content } : undefined}
-          />
-        </div>
+      {/* Divider */}
+      <div className="border-t border-border/60" />
+
+      {/* File Upload */}
+      <RuleUpload projectId={projectId} onUploaded={fetchRules} />
+
+      {/* Divider */}
+      <div className="border-t border-border/60" />
+
+      {/* Rules Grid */}
+      <div>
+        <h3 className="text-sm font-semibold tracking-tight mb-4">Rules ({rules.length})</h3>
+        <RuleList
+          rules={rules}
+          selectedId={selected?.id}
+          projectId={projectId}
+          onSelect={setSelected}
+          onRefresh={() => { fetchRules(); setSelected(null); }}
+        />
       </div>
     </div>
   );

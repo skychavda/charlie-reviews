@@ -1,7 +1,7 @@
 "use client";
 
 import type { Rule } from "@/types";
-import { Trash2 } from "lucide-react";
+import { Trash2, FileText } from "lucide-react";
 
 interface Props {
   rules: Rule[];
@@ -21,7 +21,8 @@ export function RuleList({ rules, selectedId, projectId, onSelect, onRefresh }: 
     onRefresh();
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
     await fetch(`/api/projects/${projectId}/rules/${id}`, { method: "DELETE" });
     onRefresh();
   }
@@ -35,14 +36,14 @@ export function RuleList({ rules, selectedId, projectId, onSelect, onRefresh }: 
   }
 
   return (
-    <div className="space-y-1">
+    <div className="flex flex-wrap gap-3">
       {rules.map((rule) => (
         <div
           key={rule.id}
-          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer text-sm transition-all duration-200 ${
+          className={`group relative flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg cursor-pointer text-sm transition-all duration-200 border ${
             selectedId === rule.id
-              ? "bg-primary/10 border border-primary/20"
-              : "hover:bg-accent/50 border border-transparent"
+              ? "bg-primary/10 border-primary/20 shadow-sm"
+              : "bg-card border-border/60 hover:bg-accent/50 hover:border-primary/20"
           }`}
           onClick={() => onSelect(rule)}
         >
@@ -55,11 +56,12 @@ export function RuleList({ rules, selectedId, projectId, onSelect, onRefresh }: 
             }`}
             title={rule.is_active ? "Active -- click to disable" : "Inactive -- click to enable"}
           />
-          <span className="truncate flex-1 font-medium">{rule.title}</span>
-          <span className="text-xs text-muted-foreground/70 shrink-0">{rule.source}</span>
+          <FileText className="size-3.5 text-muted-foreground/60 shrink-0" />
+          <span className="font-medium truncate max-w-[180px]">{rule.title}</span>
+          <span className="text-[10px] text-muted-foreground/50 shrink-0 uppercase tracking-wider">{rule.source}</span>
           <button
-            className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
-            onClick={(e) => { e.stopPropagation(); handleDelete(rule.id); }}
+            className="p-1 rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0 opacity-0 group-hover:opacity-100"
+            onClick={(e) => handleDelete(e, rule.id)}
           >
             <Trash2 className="size-3.5" />
           </button>

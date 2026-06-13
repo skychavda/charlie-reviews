@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReviewTrigger } from "@/components/review-trigger";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
-import { FileText, BarChart3, Clock, BookOpen, ChevronRight, Trash2, GitBranch } from "lucide-react";
+import { FileText, BarChart3, Clock, BookOpen, ChevronRight, Trash2, GitBranch, ArrowLeft } from "lucide-react";
 import type { Project, Review } from "@/types";
 
 function StatusPill({ status }: { status: string }) {
@@ -62,6 +62,13 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
 
   return (
     <div className="space-y-8">
+      <Link href="/">
+        <Button variant="ghost" size="sm">
+          <ArrowLeft data-icon="inline-start" className="size-4" />
+          Dashboard
+        </Button>
+      </Link>
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">

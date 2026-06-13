@@ -33,14 +33,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
                 <span className="font-semibold text-base tracking-tight">Charlie Reviews</span>
               </Link>
-              <nav className="flex items-center gap-1">
-                <Link
-                  href="/"
-                  className="px-3 py-1.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                >
-                  Dashboard
-                </Link>
-              </nav>
             </div>
           </div>
         </header>
